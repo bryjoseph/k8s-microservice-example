@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb # must match template metadata label
+  replicas: 1 # only want 1 for dev
+  template:
+    metadata:
+      labels:
+        app: mongodb # must match selector
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:3.6.5-jessie
+        # env: # spring boot app requires an environment variable
+        #   - name: SPRING_PROFILES_ACTIVE
+        #     value: production-microservice
+        volumeMounts: # mapping a dir inside the container to a dir outside of container
+          - name: mongo-persistent-storage
+            mountPath: /data/db # what dir is mongo using to store data?
+        resources:
+          requests:
+            memory: 500Mi
+            cpu: 500m
+      volumes:
+        - name: mongo-persistent-storage # must match volumeMounts
+          # hostPath: # represents a preexisting dir on a host machine (only for dev)
+            # path: /mnt/mongodb
+            # type: DirectoryOrCreate
+          # instead of hardcoding the configuration like above, use PVC
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-mongodb
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+    app: mongodb
+  ports:
+    - name: mongoport
+      port: 27017
+  type: ClusterIP

@@ -1,0 +1,77 @@
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: webapp-release-0
+#   labels:
+#     app: webapp
+#     release: "0"
+# spec:
+#   containers:
+#   - name: webapp
+#     image: richardchesterwood/k8s-fleetman-webapp-angular:release0
+# only here to show the difference of labels and rolling a service over to
+# use an upgraded version of the same pod
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: webapp-release-0-5
+#   labels:
+#     app: webapp
+#     release: "0-5"
+# spec:
+#   containers:
+#   - name: webapp
+#     image: richardchesterwood/k8s-fleetman-webapp-angular:release0-5
+# ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: queue
+  labels:
+    app: queue
+spec:
+  containers:
+  - name: queue
+    image: richardchesterwood/k8s-fleetman-queue:release1
+---
+# ReplicaSet example
+# apiVersion: apps/v1
+# kind: ReplicaSet
+# metadata:
+#   name: webapp-replicaset
+# spec:
+#   selector:
+#     matchLabels:
+#       app: webapp
+#   replicas: 1
+#   template: # temp for the pod
+#     metadata: 
+#       labels:
+#         app: webapp
+#     spec:
+#       containers:
+#         - name: webapp
+#           image: richardchesterwood/k8s-fleetman-webapp-angular:release0-5
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webbapp-deployment
+spec:
+  selector:
+    matchLabels:
+      app: webapp
+  replicas: 2
+  #minReadySeconds: 30 # optional tag to control version switching between replicasets
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        image: richardchesterwood/k8s-fleetman-webapp-angular:release0-5
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"

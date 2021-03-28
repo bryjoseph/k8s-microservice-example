@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: secure-routing
+  labels:
+      name: secure-routing
+  # namespace: # can create a different ingress file and add a DIFF namespace for the ingress object and include services not incld. in default
+  # such as prometheus or AlertManager, etc which run on kube-system or kudo-system, etc.
+  annotations: # using https is a basic requirement when using basic-auth so the username + pass don't get intercepted
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: fleetman-fake-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Get lost unless you have pass"
+  # the annotations will be applied to ALL routes below not just one or other
+spec:
+  rules:
+  - host: queue.minikube.local.testing.com
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: fleetman-queue
+              port:
+                number: 8161

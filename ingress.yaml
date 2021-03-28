@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: basic-routing
+  labels:
+      name: secure-routing
+  # namespace: # can create a different ingress file and add a DIFF namespace for the ingress object and include services not incld. in default
+  # such as prometheus or AlertManager, etc which run on kube-system or kudo-system, etc.
+spec:
+  rules:
+  - host: minikube.local.testing.com
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: fleetman-webapp
+              port:
+                number: 80

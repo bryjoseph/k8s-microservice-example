@@ -1,0 +1,172 @@
+# yaml for deployments, replicasets, pods per industry naming standards
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq
+spec:
+  selector:
+    matchLabels:
+      app: activemq # must match template metadata label
+  replicas: 1 # only want 1 queue running at any one time
+  template:
+    metadata:
+      labels:
+        app: activemq # must match selector
+    spec:
+      containers:
+      - name: queue
+        image: richardchesterwood/k8s-fleetman-queue:resources
+        resources:
+          requests:
+            memory: 300Mi
+            cpu: 100m
+          limits:
+            memory: 300Mi
+            cpu: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: position-simulator
+spec:
+  selector:
+    matchLabels:
+      app: position-simulator # must match template metadata label
+  replicas: 1 # only want 1 pos simulator running at any one time
+  template:
+    metadata:
+      labels:
+        app: position-simulator # must match selector
+    spec:
+      containers:
+      - name: position-simulator
+        image: richardchesterwood/k8s-fleetman-position-simulator:resources
+        env: # spring boot app requires an environment variable
+          - name: SPRING_PROFILES_ACTIVE
+            value: production-microservice
+          # WORST WAY OF USING CONFIG MAP #
+          # - name: DATABASE_URL
+          #   valueFrom:
+          #     configMapKeyRef: 
+          #       name: global-database-config
+          #       key: database.url
+          # - name: DATABASE_PASSWORD
+          #   valueFrom:
+          #     configMapKeyRef: 
+          #       name: global-database-config
+          #       key: database.password
+          # END OF CONFIG MAP #
+        
+        # Second method for applying configmaps #
+        # envFrom:
+        #   - configMapRef:
+        #       name: global-database-config
+        # END OF second method #
+
+        # 3RD method of configmap #
+        volumeMounts:
+          - mountPath: /etc/any/config # locate/create a directory inside of image in use (will be auto created)
+            name: database-config-volume
+      volumes:
+        - name: database-config-volume
+          configMap:
+            name: global-database-config
+      # END OF third config map technique #
+      resources:
+        requests:
+          memory: 200Mi
+          cpu: 50m
+        limits:
+          memory: 200Mi
+          cpu: 50m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: position-tracker
+spec:
+  selector:
+    matchLabels:
+      app: position-tracker # must match template metadata label
+  replicas: 1 # only want 1 for dev
+  template:
+    metadata:
+      labels:
+        app: position-tracker # must match selector
+    spec:
+      containers:
+      - name: position-tracker
+        image: richardchesterwood/k8s-fleetman-position-tracker:resources
+        # image: richardchesterwood/k8s-fleetman-position-tracker:release4 -- uses the StatefulSet
+        env: # spring boot app requires an environment variable
+          - name: SPRING_PROFILES_ACTIVE
+            value: production-microservice
+        resources:
+          requests:
+            memory: 200Mi
+            cpu: 50m
+          limits:
+            memory: 200Mi
+            cpu: 50m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway # must match template metadata label
+  replicas: 1 # only want 1 for dev
+  template:
+    metadata:
+      labels:
+        app: api-gateway # must match selector
+    spec:
+      containers:
+      - name: api-gateway
+        image: richardchesterwood/k8s-fleetman-api-gateway:resources
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        env: # spring boot app requires an environment variable
+          - name: SPRING_PROFILES_ACTIVE
+            value: production-microservice
+        resources:
+          requests:
+            memory: 300Mi
+            cpu: 50m
+          limits:
+            memory: 300Mi
+            cpu: 50m 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  selector:
+    matchLabels:
+      app: webapp # must match template metadata label
+  replicas: 1 # only want 1 for dev
+  template:
+    metadata:
+      labels:
+        app: webapp # must match selector
+    spec:
+      containers:
+      - name: webapp
+        image: richardchesterwood/k8s-fleetman-webapp-angular:release2
+        env: # spring boot app requires an environment variable
+          - name: SPRING_PROFILES_ACTIVE
+            value: production-microservice
+        resources:
+          requests:
+            memory: 200Mi
+            cpu: 50m
+          limits:
+            memory: 200Mi
+            cpu: 50m

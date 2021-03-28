@@ -1,0 +1,25 @@
+# yaml for deployments, replicasets, pods per industry naming standards
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq
+spec:
+  selector:
+    matchLabels:
+      app: activemq # must match template metadata label
+  replicas: 1 # only want 1 queue running at any one time
+  template:
+    metadata:
+      labels:
+        app: activemq # must match selector
+    spec:
+      containers:
+      - name: queue
+        image: richardchesterwood/k8s-fleetman-queue:release2
+        resources:
+          requests: # used by the scheduler to make suggestions by developer
+            memory: 250Mi # 1M = 1000kb  1Mi = 1024KB
+            cpu: 50m  # Can be 1.5 OR .1 for CPU or 100m = .1 milicores
+          limits: # limits can not be SMALLER than requests
+            memory: 350Mi # if limit is exceeded then container is killed (then restarted)
+            cpu: 300m # if CPU is exceeded the container will not be able to run over limit (throttle)

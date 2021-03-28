@@ -1,0 +1,30 @@
+# configuring the persistent volume claim - mongo-pvc
+# amazon configuration (could add additional cloud providers if nec.)
+# what is needed for pv
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  storageClassName: localstorage # way to tie pvc with pv (binding)
+  resources:
+    requests:
+      storage: 100Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+---
+# how is the pvc implemented
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-storage
+spec:
+  storageClassName: localstorage # needs to match pvc (binding)
+  hostPath:
+    path: "/mnt/mongodb/data"
+    type: DirectoryOrCreate
+  capacity:
+    storage: 500Mi
+  accessModes:
+    - ReadWriteOnce

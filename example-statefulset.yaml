@@ -1,0 +1,66 @@
+# mongo-db example of stateful set 
+# most of the time a hosted db via Amazon RDS is more common
+# 1st Create a headless service to access the replicated data pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    name: mongo
+spec:
+  selector:
+    role: mongo
+  clusterIP: None
+  ports:
+  - port: 27017
+    targetPort: 27017
+# connecting a regular service to a StatefulSet makes it headless
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  serviceName: "mongo"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: mongo
+        image: mongo
+        command:
+          - "--replSet"
+          - rs0
+          - "--smallfiles"
+          - "--noprealloc"
+          - "--bind_ip"
+          - "0.0.0.0"
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+      - name: mongo-sidecar
+        image: cvallance/mongo-k8s-sidecar
+        env:
+          - name: MONGO_SIDECAR_POD_LABELS
+            value: "role=mongo"
+          - name: KUBERNETES_MONGO_SERVICE_NAME
+            value: mongo
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 100Mi
+

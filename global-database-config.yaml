@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp
+  namespace: default
+data: # simple key value pairs
+  DATABASE_URL: "https://dbserver.somewhere.com:3306"
+  DATABASE_PASSWORD: "xyz123"
+
+  # if using the volume mount technique for the config map under DATA
+  # name of file getting created is database.properties
+  # database.properties: |
+  #   database.url=https://dbserver.somewhere.com:3306
+  #   database.password=xyz123
+  # the bar after db.prop is how you concat multiple lines in yaml

@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-queue # gets added to k8s DNS service
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+    app: activemq
+  ports:
+    - name: http
+      port: 8161 # this is the admin console port
+      nodePort: 30010
+    - name: endpoint
+      port: 61616 # default activemq port
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-postion-tracker # gets added to k8s DNS service
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+    app: position-tracker
+  ports:
+    - name: http
+      port: 8080 # this is the admin console port
+      # nodePort: 30080 # this is for testing the api in a browser
+  # type: NodePort # need to be NodePort to access from outside the cluster
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-api-gateway # gets added to k8s DNS service
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+    app: api-gateway # must match from deployment
+  ports:
+    - name: http
+      port: 8080 # this is the admin console port
+      # nodePort: 30020 # this is for testing the api in a browser
+  type: ClusterIP # need to be NodePort to access from outside the cluster
+  # type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-webapp
+spec:
+  # This defines which pods are going to be represented by this Service
+  # The service becomes a network endpoint for either other services
+  # or maybe external users to connect to (eg browser)
+  selector:
+    app: webapp
+  ports:
+    - name: http
+      port: 80
+      nodePort: 30080
+  type: NodePort

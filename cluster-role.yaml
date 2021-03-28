@@ -1,0 +1,50 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: new-member
+  namespace: playground
+rules: 
+  - apiGroups: ["","apps"] # describes the apiVersions the resources assoc with (e.g. Pods, Services and Deployments)
+    resources: ["pods"] # on object from list of verbs
+    # verbs: ["get", "watch", "list"] # what the user can do
+    verbs: ["*"] # means they can do everything in the playground namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: put-users-into-new-member-role
+  namespace: playground
+subjects:
+  # List users who are going into this role
+- kind: User
+  name: tom-linux-login-name # name of user (defined by external auth system)
+- kind: User
+  name: tim-linux-login-name # name of user (defined by external auth system)
+roleRef:
+  kind: Role
+  name: new-member
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: new-member
+rules: 
+  - apiGroups: ["","apps", "extensions", "autoscaling"] # describes the apiVersions the resources assoc with (e.g. Pods, Services and Deployments)
+    resources: ["pods"] # on object from list of verbs
+    verbs: ["get", "watch", "list"] # what the user can do
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: put-users-into-new-member-role
+subjects:
+  # List users who are going into this role
+- kind: User
+  name: tom-linux-login-name # name of user (defined by external auth system)
+- kind: User
+  name: tim-linux-login-name # name of user (defined by external auth system)
+roleRef:
+  kind: ClusterRole
+  name: new-member
+  apiGroup: rbac.authorization.k8s.io
